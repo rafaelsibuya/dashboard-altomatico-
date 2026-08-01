@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sibuyatech · Análise de Planilhas</title>
+    <!-- Font Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <!-- Configurações do Tailwind (Cores Personalizadas) -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#99f6e4',
+                            300: '#5eead4',
+                            400: '#2dd4bf',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- HTML2PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        .reveal {
+            animation: reveal 0.6s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        @keyframes reveal {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        /* Estilização da scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+
+        /* Painéis glassmorphism */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+        }
+
+        /* Transições suaves de passos */
+        .step-enter {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+
+        .step-enter.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Botão gradiente */
+        .btn-gradient {
+            background-image: linear-gradient(135deg, #0d9488 0%, #0f766e 50%, #14b8a6 100%);
+            background-size: 150% 150%;
+            transition: background-position 0.4s ease, transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .btn-gradient:hover {
+            background-position: 100% 50%;
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .btn-gradient:active {
+            transform: translateY(0);
+        }
+
+        /* Select custom */
+        select,
+        .select-like {
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        select:focus,
+        .select-like:focus-within {
+            border-color: #14b8a6;
+            box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+        }
+    </style>
+</head>
+
+<body class="bg-slate-100 min-h-screen text-slate-800"
+    style="background-image: radial-gradient(circle at 15% 10%, rgba(20,184,166,0.08), transparent 40%), radial-gradient(circle at 85% 90%, rgba(59,130,246,0.08), transparent 40%);">
+
+    <!-- Navegação -->
+    <nav class="sticky top-0 z-40 border-b border-slate-200 bg-white/85 backdrop-blur-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <img src="{{ url_for('static', path='logo.png') }}" alt="Sibuyatech Logo"
+                        class="h-10 w-10 mr-3 rounded-xl object-cover border border-slate-200 shadow-sm"
+                        onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Sibuyatech&background=0d9488&color=fff';">
+                    <div>
+                        <h1 class="text-lg font-extrabold text-slate-800 tracking-tight leading-tight">Análise de Dados
+                            por Planilha</h1>
+                        <p class="text-xs text-slate-500 leading-tight">Importe, cruze colunas e descubra insights</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="clearAll()"
+                        class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 hover:border-red-300 shadow-sm transition-colors">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Resetar Sistema
+                    </button>
+                    <span
+                        class="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700 border border-brand-100">
+                        <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Sibuyatech Analytics
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+
+        <!-- Splash Screen Overlay -->
+        <div id="splash-screen"
+            class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-teal-700 via-teal-800 to-slate-900 transition-opacity duration-700 opacity-100">
+            <img src="{{ url_for('static', path='logo.png') }}" alt="Sibuyatech Logo"
+                class="h-28 w-28 mb-6 rounded-2xl object-cover border-4 border-white/20 shadow-2xl"
+                onerror="this.style.display='none';">
+            <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tight">BEM VINDO</h1>
+            <p class="text-teal-200 text-lg">Sibuyatech Analytics</p>
+            <div class="mt-6 h-1.5 w-48 rounded-full bg-white/20 overflow-hidden">
+                <div class="h-full w-1/2 rounded-full bg-white/80 animate-pulse"></div>
+            </div>
+        </div>
+
+        <!-- Full-screen Loading Overlay -->
+        <div id="fullscreen-loading"
+            class="fixed inset-0 z-50 hidden flex-col items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+            <div class="bg-white rounded-2xl p-8 flex flex-col items-center shadow-2xl transform transition-transform scale-95"
+                id="loading-modal">
+                <div
+                    class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-slate-200 border-t-brand-600 mb-4">
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Processando Planilha</h3>
+                <p class="text-slate-500 text-sm text-center max-w-xs">Analisando dados e estruturando as informações.
+                    Isso pode levar alguns segundos...</p>
+            </div>
+        </div>
+
+        <!-- Indicador de Progresso dos Passos -->
+        <ol class="flex items-center gap-2 mb-8" id="step-progress">
+            <li id="sp-1" class="flex items-center gap-2 text-brand-600">
+                <span
+                    class="step-dot inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-brand-600 bg-brand-600 text-white text-sm font-bold">1</span>
+                <span class="text-sm font-semibold">Importar</span>
+            </li>
+            <li class="flex-1 h-0.5 rounded-full bg-slate-200"></li>
+            <li id="sp-2" class="flex items-center gap-2 text-slate-400">
+                <span
+                    class="step-dot inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-slate-300 bg-white text-slate-400 text-sm font-bold">2</span>
+                <span class="text-sm font-semibold">Configurar</span>
+            </li>
+            <li class="flex-1 h-0.5 rounded-full bg-slate-200"></li>
+            <li id="sp-3" class="flex items-center gap-2 text-slate-400">
+                <span
+                    class="step-dot inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-slate-300 bg-white text-slate-400 text-sm font-bold">3</span>
+                <span class="text-sm font-semibold">Visualizar</span>
+            </li>
+        </ol>
+
+        <!-- Passo 1: Upload -->
+        <section id="step-upload"
+            class="glass-panel rounded-2xl p-8 mb-8 step-enter active transition-all duration-500">
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-3">
+                    <span
+                        class="bg-gradient-to-br from-brand-500 to-brand-700 text-white rounded-xl h-9 w-9 flex items-center justify-center text-base shadow-sm">1</span>
+                    Importar Dados
+                </h2>
+                <span id="upload-status"
+                    class="hidden inline-flex items-center gap-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 text-xs font-semibold">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span id="upload-status-text"></span>
+                </span>
+            </div>
+
+            <!-- Tutorial -->
+            <div class="flex flex-wrap gap-3 mb-6">
+                <div class="flex-1 min-w-[200px] bg-brand-50/70 border border-brand-100 rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <span
+                            class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand-500 text-white text-xs font-bold">1</span>
+                        <span class="text-sm font-semibold text-brand-800">Envie a planilha</span>
+                    </div>
+                    <p class="text-xs text-brand-700 leading-relaxed">Faça o upload do arquivo Excel (.xlsx) que deseja
+                        analisar.</p>
+                </div>
+                <div class="flex-1 min-w-[200px] bg-sky-50/70 border border-sky-100 rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <span
+                            class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-sky-500 text-white text-xs font-bold">2</span>
+                        <span class="text-sm font-semibold text-sky-800">Ajuste os dados</span>
+                    </div>
+                    <p class="text-xs text-sky-700 leading-relaxed">Ignore linhas desnecessárias ou defina uma nova
+                        linha como cabeçalho.</p>
+                </div>
+                <div class="flex-1 min-w-[200px] bg-violet-50/70 border border-violet-100 rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <span
+                            class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-violet-500 text-white text-xs font-bold">3</span>
+                        <span class="text-sm font-semibold text-violet-800">Cruze as colunas</span>
+                    </div>
+                    <p class="text-xs text-violet-700 leading-relaxed">Selecione uma ou mais colunas para cruzar e gerar
+                        o gráfico.</p>
+                </div>
+            </div>
+
+            <div class="mt-2 flex justify-center rounded-xl border-2 border-dashed border-slate-300 px-6 py-12 bg-gradient-to-b from-white to-slate-50 hover:border-brand-400 hover:bg-brand-50/50 transition-all cursor-pointer group"
+                id="drop-zone" onclick="document.getElementById('file-upload').click()">
+                <div class="text-center">
+                    <div
+                        class="mx-auto h-16 w-16 rounded-2xl bg-brand-50 group-hover:bg-brand-100 flex items-center justify-center mb-4 transition-colors">
+                        <svg class="h-8 w-8 text-brand-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd"
+                                d="M11.47 2.47a.75.75 0 011.06 0l4.5 4.5a.75.75 0 01-1.06 1.06l-3.22-3.22V16.5a.75.75 0 01-1.5 0V4.81L8.03 8.03a.75.75 0 01-1.06-1.06l4.5-4.5zM3 15.75a.75.75 0 01.75.75v2.25a1.5 1.5 0 001.5 1.5h13.5a1.5 1.5 0 001.5-1.5V16.5a.75.75 0 011.5 0v2.25a3 3 0 01-3 3H5.25a3 3 0 01-3-3V16.5a.75.75 0 01.75-.75z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="text-sm text-slate-600">
+                        <span class="font-semibold text-brand-600 group-hover:text-brand-700">Clique para
+                            escolher</span>
+                        <span class="text-slate-500"> ou arraste e solte o arquivo aqui</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-2">Formatos aceitos: .xlsx</p>
+                    <input id="file-upload" name="file-upload" type="file" class="sr-only" accept=".xlsx">
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Passo 2: Configuração -->
+        <section id="step-config"
+            class="hidden glass-panel rounded-2xl p-8 mb-8 step-enter transition-all duration-500">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+                <span
+                    class="bg-gradient-to-br from-brand-500 to-brand-700 text-white rounded-xl h-9 w-9 flex items-center justify-center text-base shadow-sm">2</span>
+                Revisão e Configuração
+            </h2>
+
+            <!-- Sugestões de Análise Automáticas -->
+            <div id="suggestions-panel" class="mb-8">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <div class="flex items-center gap-3">
+                        <span
+                            class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-sm">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800 leading-tight">Sugestões de Análise</h3>
+                            <p class="text-xs text-slate-500">Insights automáticos gerados a partir das colunas da sua
+                                planilha</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span id="suggestions-state" class="hidden text-xs text-slate-400 animate-pulse">analisando
+                            dados...</span>
+                        <button onclick="loadSuggestions()" title="Atualizar sugestões"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-brand-700 hover:border-brand-300 shadow-sm transition-colors">
+                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                            </svg>
+                            Atualizar
+                        </button>
+                    </div>
+                </div>
+                <div id="suggestions-list" class="flex gap-4 overflow-x-auto custom-scrollbar pb-2 -mx-1 px-1">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Visualização de Dados -->
+                <div class="lg:col-span-2">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-semibold text-slate-800">Pré-visualização dos dados</h3>
+                        <span class="text-xs text-slate-400">Exibindo as 100 primeiras linhas</span>
+                    </div>
+                    <div
+                        class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm max-h-80 custom-scrollbar relative bg-white">
+                        <table class="min-w-full divide-y divide-slate-200">
+                            <thead class="bg-slate-50 sticky top-0 z-10 shadow-sm" id="table-head">
+                            </thead>
+                            <tbody class="bg-white divide-y divide-slate-200" id="table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Configuração do Dashboard -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-5 flex items-center gap-2">
+                        <svg class="h-5 w-5 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Parâmetros da Análise
+                    </h3>
+
+                    <div class="space-y-5">
+                        <!-- Multi-seleção de colunas X -->
+                        <div id="multi-x-wrap" class="relative">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Colunas para cruzar (eixo
+                                X)</label>
+                            <div class="flex items-center gap-2">
+                                <button type="button" id="multi-x-trigger" onclick="toggleMultiX()"
+                                    class="select-like flex-1 flex items-center justify-between rounded-lg border border-slate-300 bg-white py-2.5 pl-3 pr-2 text-sm text-slate-700 shadow-sm">
+                                    <span id="multi-x-label" class="truncate">Selecionar colunas...</span>
+                                    <svg class="h-4 w-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                <button type="button" onclick="clearXSelection()" title="Limpar seleção"
+                                    class="shrink-0 inline-flex items-center justify-center h-9 w-9 rounded-lg border border-slate-300 bg-white text-slate-400 hover:text-red-500 hover:border-red-200 shadow-sm transition-colors">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div id="multi-x-panel"
+                                class="hidden absolute z-30 mt-2 w-full rounded-xl border border-slate-200 bg-white shadow-xl max-h-56 overflow-y-auto custom-scrollbar">
+                                <div
+                                    class="px-3 py-2 border-b border-slate-100 bg-slate-50 rounded-t-xl text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                                    Colunas disponíveis</div>
+                                <div id="multi-x-list"></div>
+                            </div>
+                            <div id="x-chips" class="mt-2 flex flex-wrap gap-1.5"></div>
+                            <p class="text-xs text-slate-400 mt-1.5">Quanto mais colunas, mais detalhado o cruzamento.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Célula analisada
+                                (valor)</label>
+                            <select id="select-y"
+                                class="mt-1 block w-full rounded-lg border-slate-300 py-2.5 pl-3 pr-10 text-sm focus:border-brand-500 focus:outline-none focus:ring-brand-500 border shadow-sm bg-white"></select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Tipo de Evolução
+                                (Análise)</label>
+                            <select id="select-agg"
+                                class="mt-1 block w-full rounded-lg border-slate-300 py-2.5 pl-3 pr-10 text-sm focus:border-brand-500 focus:outline-none focus:ring-brand-500 border shadow-sm bg-white">
+                                <option value="sum">Soma (Evolução de Valor)</option>
+                                <option value="count">Contagem (Quantidade de Registros)</option>
+                                <option value="count_distinct">Contagem Única (Valores Distintos)</option>
+                                <option value="mean">Média</option>
+                                <option value="min">Mínimo</option>
+                                <option value="max">Máximo</option>
+                                <option value="median">Mediana</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Tipo de Gráfico</label>
+                            <select id="select-chart-type"
+                                class="mt-1 block w-full rounded-lg border-slate-300 py-2.5 pl-3 pr-10 text-sm focus:border-brand-500 focus:outline-none focus:ring-brand-500 border shadow-sm bg-white">
+                                <option value="line">Linha</option>
+                                <option value="bar">Coluna (Barras)</option>
+                                <option value="doughnut">Rosca</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Layout do Dashboard</label>
+                            <select id="select-layout"
+                                class="mt-1 block w-full rounded-lg border-slate-300 py-2.5 pl-3 pr-10 text-sm focus:border-brand-500 focus:outline-none focus:ring-brand-500 border shadow-sm bg-white">
+                                <option value="stack">Um abaixo do outro (empilhado)</option>
+                                <option value="single">Somente o gráfico principal</option>
+                            </select>
+                            <p class="text-xs text-slate-400 mt-1.5">Quando houver um segundo gráfico (ex.: Top
+                                clientes), escolha como exibi-lo.</p>
+                        </div>
+
+                        <button id="btn-generate"
+                            class="w-full mt-6 btn-gradient text-white font-bold py-3 px-4 rounded-xl shadow-sm flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-brand-500/30">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                            </svg>
+                            Gerar Dashboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Passo 3: Dashboard -->
+        <section id="step-dashboard" class="hidden glass-panel rounded-2xl p-8 step-enter transition-all duration-500">
+            <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
+                <div class="flex items-center gap-3">
+                    <span
+                        class="bg-gradient-to-br from-brand-500 to-brand-700 text-white rounded-xl h-9 w-9 flex items-center justify-center text-base shadow-sm shrink-0">3</span>
+                    <div class="flex items-center gap-2 group">
+                        <h2 id="dashboard-title" class="text-2xl font-bold text-slate-800">Dashboard de Análise</h2>
+                        <input id="dashboard-title-input" type="text" maxlength="60" value="Dashboard de Análise"
+                            class="hidden text-xl font-bold text-slate-800 border-2 border-brand-300 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm">
+                        <button id="btn-edit-title" onclick="editDashboardTitle()"
+                            class="p-1.5 rounded-lg text-slate-400 opacity-0 group-hover:opacity-100 hover:text-brand-600 hover:bg-brand-50 transition-all"
+                            title="Editar nome do dashboard">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2" id="dashboard-meta">
+                    <div class="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm"
+                        id="layout-seg">
+                        <button type="button" data-layout="stack" onclick="setLayout('stack')"
+                            class="layout-btn inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors">
+                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M3 5h18M3 10h18M3 15h18M3 20h18" />
+                            </svg>
+                            Empilhado
+                        </button>
+                        <button type="button" data-layout="single" onclick="setLayout('single')"
+                            class="layout-btn inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors">
+                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 5h18v14H3V5z" />
+                            </svg>
+                            Somente principal
+                        </button>
+                    </div>
+                    <button onclick="scrollToConfig()"
+                        class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-brand-700 hover:border-brand-300 shadow-sm transition-colors">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+                        </svg>
+                        Ajustar parâmetros
+                    </button>
+                    <button onclick="collapseDashboard()"
+                        class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 shadow-sm transition-colors">
+                        Recolher
+                    </button>
+                    <button onclick="clearAll()"
+                        class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 hover:border-red-300 shadow-sm transition-colors">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Limpar
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPIs -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" id="kpi-cards">
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full" id="charts-container">
+                <div class="w-full h-96 relative col-span-1 lg:col-span-2" id="main-chart-container">
+                    <canvas id="myChart"></canvas>
+                </div>
+                <div class="w-full h-96 relative hidden col-span-1 lg:col-span-2" id="cliente-chart-container">
+                    <canvas id="clienteChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+
+    <!-- Toasts Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+    <footer class="border-t border-slate-200 py-6 mt-4">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-xs text-slate-400">Sibuyatech · Sistema de Análise de Dados por Planilha — dashboard dinâmico
+                com cruzamento de múltiplas colunas.</p>
+        </div>
+    </footer>
+
+    <script>
+        let myChartInstance = null;
+        let clienteChartInstance = null;
+        let ignoredRows = new Set();
+        let loadedColumns = [];
+        let loadedData = [];
+        let currentHeaderIndex = -1;
+        let selectedXCols = new Set();
+        let uploadedFileName = '';
+
+        function showToast(message, type = 'error') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            let bgClass = type === 'error' ? 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/50 dark:border-red-800 dark:text-red-200' : 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-900/50 dark:border-emerald-800 dark:text-emerald-200';
+            let iconHtml = type === 'error' ?
+                '<svg class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>' :
+                '<svg class="h-5 w-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+
+            toast.className = `flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg transform transition-all duration-300 translate-y-full opacity-0 ${bgClass}`;
+            toast.innerHTML = `${iconHtml}<span class="text-sm font-medium">${message}</span>`;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-full', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-full', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+
+        async function exportDataCSV() {
+            const cols = getEffectiveColumns();
+            const clienteCol = cols.find(c => String(c).toLowerCase().includes('cliente'));
+            const payload = {
+                ignored_indexes: Array.from(ignoredRows),
+                header_index: currentHeaderIndex,
+                x_columns: Array.from(selectedXCols),
+                y_column: document.getElementById('select-y').value,
+                aggregation: document.getElementById('select-agg').value,
+                cliente_column: clienteCol || null,
+                session_id: currentSessionId
+            };
+
+            try {
+                const response = await fetch('/download_data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'dados_filtrados.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                } else {
+                    const result = await response.json();
+                    showToast(result.error);
+                }
+            } catch (e) {
+                showToast("Erro ao baixar CSV.");
+            }
+        }
+
+        function exportToPDF() {
+            const dashboard = document.getElementById('step-dashboard');
+            html2pdf().from(dashboard).set({
+                margin: 1,
+                filename: 'dashboard.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+            }).save();
+        }
+
+        let currentSessionId = '';
+
+        const aggNames = {
+            sum: 'Soma',
+            count: 'Contagem',
+            count_distinct: 'Contagem Única',
+            mean: 'Média',
+            min: 'Mínimo',
+            max: 'Máximo',
+            median: 'Mediana'
+        };
+
+        const kpiIcons = {
+            rows: '<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18M9 4v16M15 4v16M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z"/></svg>',
+            currency: '<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>',
+            average: '<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>',
+            count: '<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>',
+            tags: '<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z"/></svg>'
+        };
+
+        const analysisIcons = {
+            trend: '<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/></svg>',
+            bars: '<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>',
+            pie: '<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z"/><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z"/></svg>',
+            stats: '<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h.75V21H21"/><path stroke-linecap="round" stroke-linejoin="round" d="M7 15l3-3 4 4 5-6"/></svg>',
+            grid: '<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h7v7H3V3zM14 3h7v7h-7V3zM3 14h7v7H3v-7zM14 14h7v7h-7v-7z"/></svg>',
+            ranking: '<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l3.75-12 5.25 7.5 2.25-3.75 2.25 8.25H4.5z"/></svg>',
+            count: '<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75L12 3l5.571 6.75L12 20.25 6.429 9.75z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v17.25"/></svg>'
+        };
+
+        const catStyles = {
+            'Temporal': 'from-teal-500 to-emerald-500',
+            'Comparação': 'from-sky-500 to-cyan-500',
+            'Distribuição': 'from-violet-500 to-purple-500',
+            'Cruzamento': 'from-amber-500 to-orange-500',
+            'Estatística': 'from-rose-500 to-pink-500',
+            'Ranking': 'from-indigo-500 to-blue-500'
+        };
+
+        let currentSuggestions = [];
+
+        // Splash screen
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                splash.classList.replace('opacity-100', 'opacity-0');
+                setTimeout(() => splash.classList.add('hidden'), 700);
+            }, 1000);
+        });
+
+        // Indicador de passos
+        function setStep(active) {
+            [1, 2, 3].forEach(n => {
+                const li = document.getElementById('sp-' + n);
+                const dot = li.querySelector('.step-dot');
+                li.classList.remove('text-brand-600', 'text-slate-400');
+                dot.classList.remove('bg-brand-600', 'text-white', 'border-brand-600', 'border-slate-300');
+                if (n <= active) {
+                    li.classList.add('text-brand-600');
+                    dot.classList.add('bg-brand-600', 'text-white', 'border-brand-600');
+                } else {
+                    li.classList.add('text-slate-400');
+                    dot.classList.add('border-slate-300');
+                }
+            });
+        }
+
+        function getEffectiveColumns() {
+            let cols = loadedColumns;
+            if (currentHeaderIndex >= 0) {
+                const headerRow = loadedData.find(r => r['_index'] === currentHeaderIndex);
+                if (headerRow) {
+                    cols = loadedColumns.map(origCol => headerRow[origCol] || origCol);
+                }
+            }
+            return cols;
+        }
+
+        // Drag & Drop
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-upload');
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-brand-400', 'bg-brand-50/60');
+        });
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-brand-400', 'bg-brand-50/60');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-brand-400', 'bg-brand-50/60');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleUpload(fileInput.files[0]);
+            }
+        });
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleUpload(e.target.files[0]);
+        });
+
+        function showFullscreenLoading() {
+            const el = document.getElementById('fullscreen-loading');
+            el.classList.remove('hidden');
+            // trigger reflow
+            void el.offsetWidth;
+            el.classList.replace('opacity-0', 'opacity-100');
+            document.getElementById('loading-modal').classList.replace('scale-95', 'scale-100');
+        }
+
+        function hideFullscreenLoading() {
+            const el = document.getElementById('fullscreen-loading');
+            el.classList.replace('opacity-100', 'opacity-0');
+            document.getElementById('loading-modal').classList.replace('scale-100', 'scale-95');
+            setTimeout(() => {
+                el.classList.add('hidden');
+            }, 300);
+        }
+
+        async function handleUpload(file) {
+            if (!file.name.endsWith('.xlsx')) {
+                showToast("Por favor, envie um arquivo .xlsx");
+                return;
+            }
+            uploadedFileName = file.name;
+            showFullscreenLoading();
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/upload', { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.success) {
+                    currentSessionId = result.session_id;
+                    populatePreview(result.columns, result.preview);
+                    const status = document.getElementById('upload-status');
+                    status.classList.remove('hidden');
+                    document.getElementById('upload-status-text').textContent = `${file.name} · ${result.total_rows} linhas`;
+                    showConfigStep();
+                } else {
+                    showToast(result.error);
+                }
+            } catch (error) {
+                console.error(error);
+                showToast("Erro ao conectar com o servidor.");
+            } finally {
+                hideFullscreenLoading();
+            }
+        }
+
+        function populatePreview(columns, data) {
+            loadedColumns = columns;
+            loadedData = data;
+            ignoredRows.clear();
+            currentHeaderIndex = -1;
+
+            const tableCont = document.getElementById('table-container');
+            if (tableCont) tableCont.classList.add('reveal');
+            const thead = document.getElementById('table-head');
+            let trHead = '<tr>';
+            trHead += '<th class="px-3 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider w-20 bg-slate-100">Cabeçalho</th>';
+            trHead += '<th class="px-3 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider w-20 bg-slate-100">Ignorar</th>';
+            columns.forEach(col => {
+                trHead += `<th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-100">${col}</th>`;
+            });
+            trHead += '</tr>';
+            thead.innerHTML = trHead;
+
+            const tbody = document.getElementById('table-body');
+            let rowsHtml = '';
+            data.forEach((row, idx) => {
+                const rowIndex = row['_index'];
+                let tr = `<tr id="row-${rowIndex}" class="hover:bg-brand-50/40 transition-colors">
+                    <td class="px-3 py-4 whitespace-nowrap text-center bg-white">
+                        <input type="radio" name="header_radio" class="header-radio h-4 w-4 text-brand-600 focus:ring-brand-500 border-slate-300 cursor-pointer" data-index="${rowIndex}" title="Usar esta linha como nomes das colunas">
+                    </td>
+                    <td class="px-3 py-4 whitespace-nowrap text-center bg-white">
+                        <input type="checkbox" class="ignore-checkbox h-4 w-4 text-brand-600 focus:ring-brand-500 border-slate-300 rounded cursor-pointer" data-index="${rowIndex}" title="Ignorar esta linha">
+                    </td>`;
+                columns.forEach(col => {
+                    tr += `<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 max-w-xs truncate bg-white" title="${row[col]}">${row[col]}</td>`;
+                });
+                tr += '</tr>';
+                rowsHtml += tr;
+            });
+            tbody.innerHTML = rowsHtml;
+
+            document.querySelectorAll('.ignore-checkbox').forEach(cb => {
+                cb.addEventListener('change', (e) => {
+                    const idx = parseInt(e.target.dataset.index);
+                    const rowEl = document.getElementById(`row-${idx}`);
+                    if (e.target.checked) {
+                        ignoredRows.add(idx);
+                        rowEl.classList.add('opacity-40', 'line-through');
+                    } else {
+                        ignoredRows.delete(idx);
+                        rowEl.classList.remove('opacity-40', 'line-through');
+                    }
+                });
+            });
+
+            document.querySelectorAll('.header-radio').forEach(rb => {
+                rb.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        currentHeaderIndex = parseInt(e.target.dataset.index);
+                        updateDropdowns();
+                        document.querySelectorAll('tbody tr').forEach(tr => tr.classList.remove('bg-brand-50', 'shadow-inner'));
+                        const selectedRow = document.getElementById(`row-${currentHeaderIndex}`);
+                        selectedRow.classList.add('bg-brand-50', 'shadow-inner');
+                    }
+                });
+            });
+
+            updateDropdowns();
+        }
+
+        // ----- Multi-seleção de colunas X -----
+        function buildXList(cols) {
+            const list = document.getElementById('multi-x-list');
+            list.innerHTML = '';
+            cols.forEach(col => {
+                const label = document.createElement('label');
+                label.className = 'flex items-center px-3 py-2 hover:bg-brand-50/50 cursor-pointer text-sm text-slate-700 transition-colors';
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.value = col;
+                cb.className = 'x-col-cb rounded border-slate-300 text-brand-600 focus:ring-brand-500 mr-2 h-4 w-4';
+                cb.addEventListener('change', () => {
+                    if (cb.checked) selectedXCols.add(col);
+                    else selectedXCols.delete(col);
+                    renderXChips(cols);
+                    syncXTrigger();
+                });
+                label.appendChild(cb);
+                const span = document.createElement('span');
+                span.textContent = col;
+                span.className = 'truncate';
+                label.appendChild(span);
+                list.appendChild(label);
+            });
+        }
+
+        function renderXChips(cols) {
+            const chips = document.getElementById('x-chips');
+            chips.innerHTML = '';
+            selectedXCols.forEach(col => {
+                const chip = document.createElement('span');
+                chip.className = 'inline-flex items-center gap-1.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200 px-3 py-1 text-xs font-semibold shadow-sm';
+                const text = document.createElement('span');
+                text.textContent = col;
+                chip.appendChild(text);
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.innerHTML = '&times;';
+                btn.className = 'text-brand-400 hover:text-brand-700 font-bold text-sm leading-none';
+                btn.addEventListener('click', () => {
+                    selectedXCols.delete(col);
+                    const cb = document.querySelector(`#multi-x-list .x-col-cb[value="${col.replace(/"/g, '\\"')}"]`);
+                    if (cb) cb.checked = false;
+                    renderXChips(cols);
+                    syncXTrigger();
+                });
+                chip.appendChild(btn);
+                chips.appendChild(chip);
+            });
+            if (!selectedXCols.size) {
+                const hint = document.createElement('span');
+                hint.className = 'text-xs text-slate-400';
+                hint.textContent = 'Nenhuma coluna selecionada';
+                chips.appendChild(hint);
+            }
+        }
+
+        function syncXTrigger() {
+            document.getElementById('multi-x-label').textContent =
+                selectedXCols.size ? `${selectedXCols.size} coluna(s) selecionada(s)` : 'Selecionar colunas...';
+        }
+
+        function toggleMultiX() {
+            document.getElementById('multi-x-panel').classList.toggle('hidden');
+        }
+
+        function clearXSelection() {
+            selectedXCols.clear();
+            document.querySelectorAll('#multi-x-list .x-col-cb').forEach(cb => cb.checked = false);
+            renderXChips(getEffectiveColumns());
+            syncXTrigger();
+        }
+
+        document.addEventListener('click', (e) => {
+            const wrap = document.getElementById('multi-x-wrap');
+            if (wrap && !wrap.contains(e.target)) {
+                document.getElementById('multi-x-panel').classList.add('hidden');
+            }
+        });
+
+        function updateDropdowns() {
+            const cols = getEffectiveColumns();
+
+            // Select Y
+            const selectY = document.getElementById('select-y');
+            const currY = selectY.value;
+            selectY.innerHTML = '';
+            cols.forEach(col => {
+                selectY.innerHTML += `<option value="${col}">${col}</option>`;
+            });
+            if (cols.includes(currY)) selectY.value = currY;
+            else {
+                const valCol = cols.find(c => /valor|total|price|quant|preco/i.test(String(c)));
+                if (valCol) selectY.value = valCol;
+            }
+
+            // Lista de colunas X (preserva seleção ainda válida)
+            const keep = Array.from(selectedXCols).filter(c => cols.includes(c));
+            if (keep.length) {
+                selectedXCols = new Set(keep);
+            } else {
+                const dataCol = cols.find(c => /data|date|emiss|periodo|mes/i.test(String(c)));
+                selectedXCols = new Set(dataCol ? [dataCol] : cols.slice(0, 1));
+            }
+
+            buildXList(cols);
+            document.querySelectorAll('#multi-x-list .x-col-cb').forEach(cb => {
+                cb.checked = selectedXCols.has(cb.value);
+            });
+            renderXChips(cols);
+            syncXTrigger();
+
+            loadSuggestions();
+        }
+
+        // ----- Sugestões de Análise -----
+        async function loadSuggestions() {
+            const container = document.getElementById('suggestions-list');
+            const state = document.getElementById('suggestions-state');
+            container.innerHTML = `
+                <div class="w-full flex items-center justify-center gap-2 py-8 text-sm text-slate-400">
+                    <div class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-brand-600"></div>
+                    Analisando colunas da planilha...
+                </div>`;
+            state.classList.remove('hidden');
+            try {
+                const response = await fetch('/suggestions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ignored_indexes: Array.from(ignoredRows),
+                        header_index: currentHeaderIndex,
+                        session_id: currentSessionId
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    renderSuggestions(result.suggestions || []);
+                } else {
+                    container.innerHTML = `<div class="w-full text-sm text-red-500 py-6 text-center">${result.error}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = '<div class="w-full text-sm text-red-500 py-6 text-center">Erro ao buscar sugestões.</div>';
+            } finally {
+                state.classList.add('hidden');
+            }
+        }
+
+        function renderSuggestions(sugs) {
+            currentSuggestions = sugs;
+            const container = document.getElementById('suggestions-list');
+            container.innerHTML = '';
+
+            if (!sugs.length) {
+                container.innerHTML = `
+                    <div class="w-full rounded-xl border border-dashed border-slate-300 bg-white/60 p-8 text-center">
+                        <p class="text-sm text-slate-500">Não foi possível gerar sugestões automáticas para esta planilha.</p>
+                        <p class="text-xs text-slate-400 mt-1">Configure os parâmetros manualmente no painel ao lado.</p>
+                    </div>`;
+                return;
+            }
+
+            sugs.forEach((s, i) => {
+                const g = catStyles[s.category] || 'from-slate-400 to-slate-500';
+                const chips = (s.x_columns || []).map(c =>
+                    `<span class="text-[10px] font-semibold rounded-md bg-slate-100 text-slate-600 px-1.5 py-0.5">${c}</span>`).join('');
+                container.innerHTML += `
+                <button type="button" onclick="applySuggestion(${i})"
+                    class="w-72 shrink-0 group relative flex flex-col rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-brand-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 cursor-pointer">
+                    <div class="flex items-start justify-between gap-3">
+                        <span class="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br ${g} text-white shadow-sm">${analysisIcons[s.icon] || analysisIcons.stats}</span>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">${s.category}</span>
+                    </div>
+                    <h4 class="mt-3 text-sm font-bold text-slate-800 leading-snug group-hover:text-brand-700 transition-colors">${s.title}</h4>
+                    <p class="mt-1 text-xs text-slate-500 leading-relaxed flex-1">${s.description}</p>
+                    <div class="mt-3 flex items-center gap-1.5 flex-wrap">${chips}</div>
+                    <span class="mt-4 inline-flex items-center justify-center gap-1.5 rounded-lg bg-brand-600 group-hover:bg-brand-500 text-white text-xs font-bold py-2 px-3 transition-colors">
+                        Aplicar análise
+                        <svg class="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                    </span>
+                </button>`;
+            });
+        }
+
+        function applySuggestion(idx) {
+            const sug = currentSuggestions[idx];
+            if (!sug) return;
+
+            selectedXCols = new Set((sug.x_columns || []).map(String));
+            document.querySelectorAll('#multi-x-list .x-col-cb').forEach(cb => {
+                cb.checked = selectedXCols.has(cb.value);
+            });
+            renderXChips(getEffectiveColumns());
+            syncXTrigger();
+
+            document.getElementById('select-y').value = String(sug.y_column);
+            document.getElementById('select-agg').value = sug.aggregation;
+            document.getElementById('select-chart-type').value = sug.chart_type;
+
+            document.getElementById('btn-generate').click();
+        }
+
+        function showConfigStep() {
+            const stepUpload = document.getElementById('step-upload');
+            const stepConfig = document.getElementById('step-config');
+            stepUpload.classList.add('hidden');
+            stepConfig.classList.remove('hidden');
+            setStep(2);
+            setTimeout(() => {
+                stepConfig.classList.add('active');
+                stepConfig.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 50);
+        }
+
+        // Gerar Dashboard
+        document.getElementById('btn-generate').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-generate');
+            const cols = getEffectiveColumns();
+
+            if (!selectedXCols.size) {
+                alert("Selecione ao menos uma coluna para cruzar no eixo X.");
+                return;
+            }
+
+            btn.innerHTML = `<div class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div> Processando...`;
+            btn.disabled = true;
+
+            const clienteCol = cols.find(c => String(c).toLowerCase().includes('cliente'));
+            const payload = {
+                ignored_indexes: Array.from(ignoredRows),
+                header_index: currentHeaderIndex,
+                x_columns: Array.from(selectedXCols),
+                y_column: document.getElementById('select-y').value,
+                aggregation: document.getElementById('select-agg').value,
+                cliente_column: clienteCol || null
+            };
+            const chartType = document.getElementById('select-chart-type').value;
+
+            try {
+                const response = await fetch('/process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...payload, session_id: currentSessionId })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    renderKpis(result.kpis);
+                    renderChart(result.labels, result.values, payload.y_column, payload.aggregation, chartType, result.x_label, result.agg_label);
+
+                    lastCliente = (result.cliente_labels && result.cliente_values)
+                        ? { has: true, labels: result.cliente_labels, values: result.cliente_values, y: payload.y_column, agg: payload.aggregation }
+                        : { has: false };
+                    if (lastCliente.has) {
+                        renderClienteChart(lastCliente.labels, lastCliente.values, lastCliente.y, lastCliente.agg);
+                    }
+
+                    setLayout(document.getElementById('select-layout').value, false);
+                    showDashboardStep();
+                } else {
+                    showToast("Erro ao gerar dashboard: " + result.error);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Erro ao conectar.");
+            } finally {
+                btn.innerHTML = `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                            </svg> Gerar Dashboard`;
+                btn.disabled = false;
+            }
+        });
+
+        function renderKpis(kpis) {
+            const container = document.getElementById('kpi-cards');
+            container.innerHTML = '';
+            const gradients = ['from-teal-500 to-emerald-500', 'from-sky-500 to-cyan-500', 'from-indigo-500 to-violet-500'];
+            (kpis || []).forEach((kpi, i) => {
+                const g = gradients[i % gradients.length];
+                container.innerHTML += `
+                    <div class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <span class="block text-sm font-medium text-slate-500 truncate">${kpi.label}</span>
+                                <div class="mt-2 text-2xl font-extrabold text-slate-800 tracking-tight">${kpi.value}</div>
+                            </div>
+                            <span class="inline-flex items-center justify-center h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br ${g} text-white shadow-sm">${kpiIcons[kpi.icon] || kpiIcons.rows}</span>
+                        </div>
+                        <div class="absolute -bottom-6 -right-6 h-16 w-16 rounded-full bg-gradient-to-br ${g} opacity-10"></div>
+                    </div>`;
+            });
+        }
+
+        function showDashboardStep() {
+            const stepDash = document.getElementById('step-dashboard');
+            stepDash.classList.remove('hidden');
+            setStep(3);
+            setTimeout(() => {
+                stepDash.classList.add('active');
+                stepDash.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }, 50);
+        }
+
+        // ----- Layout do dashboard -----
+        let lastCliente = { has: false };
+
+        function applyLayout(layout) {
+            const main = document.getElementById('main-chart-container');
+            const cliente = document.getElementById('cliente-chart-container');
+            // Ambos sempre em largura total -> ficam empilhados (um abaixo do outro)
+            main.classList.add('lg:col-span-2');
+            cliente.classList.add('lg:col-span-2');
+            if (layout === 'single' || !lastCliente.has) {
+                cliente.classList.add('hidden');
+            } else {
+                cliente.classList.remove('hidden');
+            }
+        }
+
+        function setLayout(layout, scroll = true) {
+            document.getElementById('select-layout').value = layout;
+            document.querySelectorAll('#layout-seg .layout-btn').forEach(btn => {
+                const active = btn.dataset.layout === layout;
+                btn.classList.toggle('bg-brand-600', active);
+                btn.classList.toggle('text-white', active);
+                btn.classList.toggle('shadow-sm', active);
+                btn.classList.toggle('text-slate-600', !active);
+                btn.classList.toggle('hover:bg-slate-50', !active);
+            });
+            applyLayout(layout);
+            if (scroll) {
+                document.getElementById('step-dashboard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function scrollToConfig() {
+            document.getElementById('step-config').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function collapseDashboard() {
+            const stepDash = document.getElementById('step-dashboard');
+            stepDash.classList.add('opacity-0');
+            setTimeout(() => {
+                stepDash.classList.add('hidden');
+                stepDash.classList.remove('opacity-0', 'active');
+            }, 300);
+        }
+
+        // ----- Editar nome do dashboard -----
+        function editDashboardTitle() {
+            const input = document.getElementById('dashboard-title-input');
+            const title = document.getElementById('dashboard-title');
+            const btn = document.getElementById('btn-edit-title');
+            input.value = title.textContent;
+            input.classList.remove('hidden');
+            title.classList.add('hidden');
+            btn.classList.add('hidden');
+            input.focus();
+            input.select();
+        }
+
+        function saveDashboardTitle() {
+            const input = document.getElementById('dashboard-title-input');
+            const title = document.getElementById('dashboard-title');
+            const btn = document.getElementById('btn-edit-title');
+            const value = input.value.trim();
+            if (value) title.textContent = value;
+            input.classList.add('hidden');
+            title.classList.remove('hidden');
+            btn.classList.remove('hidden');
+        }
+
+        document.getElementById('dashboard-title-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); saveDashboardTitle(); }
+            if (e.key === 'Escape') { saveDashboardTitle(); }
+        });
+        document.getElementById('dashboard-title-input').addEventListener('blur', saveDashboardTitle);
+
+        // Limpa a análise E apaga os dados carregados, voltando ao passo de upload
+        async function clearAll() {
+            if (!confirm("Isso vai apagar os dados carregados para você poder alocar uma nova planilha. Deseja continuar?")) {
+                return;
+            }
+
+            // Destrói gráficos e limpa KPIs
+            if (myChartInstance) { myChartInstance.destroy(); myChartInstance = null; }
+            if (clienteChartInstance) { clienteChartInstance.destroy(); clienteChartInstance = null; }
+            lastCliente = { has: false };
+            document.getElementById('kpi-cards').innerHTML = '';
+
+            // Apaga os dados no servidor
+            try {
+                await fetch('/clear', { method: 'POST' });
+            } catch (e) {
+                console.error(e);
+            }
+
+            // Reinicia estado do frontend
+            loadedColumns = [];
+            loadedData = [];
+            currentSuggestions = [];
+            ignoredRows.clear();
+            currentHeaderIndex = -1;
+            selectedXCols.clear();
+            uploadedFileName = '';
+
+            document.getElementById('table-head').innerHTML = '';
+            document.getElementById('table-body').innerHTML = '';
+            document.getElementById('suggestions-list').innerHTML = '';
+            document.getElementById('x-chips').innerHTML = '';
+            document.getElementById('multi-x-list').innerHTML = '';
+            document.getElementById('multi-x-label').textContent = 'Selecionar colunas...';
+            document.getElementById('select-y').innerHTML = '';
+            document.getElementById('select-agg').value = 'sum';
+            document.getElementById('select-chart-type').value = 'line';
+            setLayout('stack', false);
+
+            document.getElementById('dashboard-title').textContent = 'Dashboard de Análise';
+            document.getElementById('dashboard-title-input').value = 'Dashboard de Análise';
+
+            const status = document.getElementById('upload-status');
+            status.classList.add('hidden');
+            document.getElementById('upload-status-text').textContent = '';
+            fileInput.value = '';
+
+            // Esconde configuração/dashboard e exibe o passo de upload
+            const stepConfig = document.getElementById('step-config');
+            stepConfig.classList.add('hidden');
+            stepConfig.classList.remove('active');
+            const stepDash = document.getElementById('step-dashboard');
+            stepDash.classList.add('hidden');
+            stepDash.classList.remove('active', 'opacity-0');
+            document.getElementById('step-upload').classList.remove('hidden');
+            setStep(1);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderChart(labels, values, yColName, aggMethod, chartType, xLabel, aggLabel) {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            if (myChartInstance) myChartInstance.destroy();
+
+            const isAmount = !['count', 'count_distinct'].includes(aggMethod);
+            const chartLabel = `${aggLabel || aggNames[aggMethod] || aggMethod} · ${yColName}`;
+
+            let backgroundColors, borderColors, borderWidth = 2, fill = false, tension = 0;
+
+            if (chartType === 'line') {
+                const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(20, 184, 166, 0.45)');
+                gradient.addColorStop(1, 'rgba(20, 184, 166, 0.0)');
+                backgroundColors = gradient;
+                borderColors = '#0d9488';
+                borderWidth = 3;
+                fill = true;
+                tension = 0.4;
+            } else if (chartType === 'bar') {
+                backgroundColors = 'rgba(20, 184, 166, 0.75)';
+                borderColors = '#0d9488';
+                borderWidth = 1;
+            } else if (chartType === 'doughnut') {
+                const colors = ['#14b8a6', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#10b981', '#f97316', '#6366f1', '#84cc16'];
+                backgroundColors = labels.map((_, i) => colors[i % colors.length]);
+                borderColors = '#ffffff';
+                borderWidth = 2;
+            }
+
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: chartLabel,
+                        font: { size: 16, family: "'Inter', 'sans-serif'", weight: '700' },
+                        color: '#1e293b',
+                        padding: { bottom: 12 }
+                    },
+                    legend: {
+                        position: chartType === 'doughnut' ? 'right' : 'top',
+                        display: chartType !== 'bar',
+                        labels: { font: { family: "'Inter', 'sans-serif'", size: 12 }, usePointStyle: true, pointStyle: 'circle' }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                        titleFont: { size: 13, family: "'Inter', 'sans-serif'" },
+                        bodyFont: { size: 13, family: "'Inter', 'sans-serif'" },
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function (context) {
+                                const val = context.raw;
+                                if (val === null || val === undefined) return '';
+                                if (isAmount) return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+                                return val + ' Registros';
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    mode: chartType === 'doughnut' ? 'nearest' : 'index',
+                    intersect: chartType === 'doughnut',
+                }
+            };
+
+            if (chartType !== 'doughnut') {
+                chartOptions.scales = {
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 0,
+                            font: { family: "'Inter', 'sans-serif'", size: 11 },
+                            autoSkip: true,
+                            maxTicksLimit: 14
+                        }
+                    },
+                    y: {
+                        grid: { color: '#e2e8f0', drawBorder: false },
+                        ticks: {
+                            font: { family: "'Inter', 'sans-serif'", size: 11 },
+                            callback: function (value) {
+                                if (isAmount) return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumSignificantDigits: 3 }).format(value);
+                                return value;
+                            }
+                        }
+                    }
+                };
+            }
+
+            myChartInstance = new Chart(ctx, {
+                type: chartType,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: chartLabel,
+                        data: values,
+                        borderColor: borderColors,
+                        backgroundColor: backgroundColors,
+                        borderWidth: borderWidth,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#0d9488',
+                        pointBorderWidth: 2,
+                        pointRadius: chartType === 'line' ? 4 : 0,
+                        pointHoverRadius: chartType === 'line' ? 6 : 0,
+                        fill: fill,
+                        tension: tension,
+                        borderRadius: chartType === 'bar' ? 5 : 0
+                    }]
+                },
+                options: chartOptions
+            });
+        }
+
+        function renderClienteChart(labels, values, yColName, aggMethod) {
+            const ctx = document.getElementById('clienteChart').getContext('2d');
+            if (clienteChartInstance) clienteChartInstance.destroy();
+
+            const isAmount = !['count', 'count_distinct'].includes(aggMethod);
+            const chartLabel = `${aggNames[aggMethod] || aggMethod} · Top 10 Clientes (${yColName})`;
+
+            clienteChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: chartLabel,
+                        data: values,
+                        backgroundColor: 'rgba(59, 130, 246, 0.75)',
+                        borderColor: '#2563eb',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: chartLabel,
+                            font: { size: 16, family: "'Inter', 'sans-serif'", weight: '700' },
+                            color: '#1e293b',
+                            padding: { bottom: 12 }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function (context) {
+                                    if (isAmount) return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.x);
+                                    return context.parsed.x + ' Registros';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                font: { family: "'Inter', 'sans-serif'", size: 11 },
+                                callback: function (value) {
+                                    if (isAmount) return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumSignificantDigits: 3 }).format(value);
+                                    return value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

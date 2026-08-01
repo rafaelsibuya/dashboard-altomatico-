@@ -1,0 +1,40 @@
+2026-08-01 18:53:26,564 - INFO - Módulo rust_security carregado com sucesso.
+2026-08-01 18:53:26,648 - INFO - Módulo rust_security carregado com sucesso.
+2026-08-01 18:54:54,107 - INFO - Módulo rust_security carregado com sucesso.
+2026-08-01 18:54:54,176 - INFO - Módulo rust_security carregado com sucesso.
+2026-08-01 19:23:34,179 - INFO - Módulo rust_security carregado com sucesso.
+2026-08-01 19:23:35,417 - INFO - Módulo rust_security carregado com sucesso.
+2026-08-01 19:23:35,492 - INFO - Módulo rust_security carregado com sucesso.
+2026-08-01 19:26:23,883 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 19:26:25,077 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 19:26:25,148 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 19:26:34,057 - INFO - UPLOAD - Sessão: 1173e817-9acb-45ed-ace6-9faa11bfe992 - Arquivo: alterações Rafa - tracking (1).xlsx - Linhas: 304
+2026-08-01 19:30:42,162 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 19:30:43,361 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 19:30:43,435 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 19:30:50,183 - INFO - UPLOAD - Sessão: 720f1bd1-f1a1-4325-990b-f29f71e892a8 - Arquivo: Planilha_1785596301724.xlsx - Linhas: 88
+2026-08-01 19:31:01,052 - INFO - UPLOAD - Sessão: bea7dc74-8742-47a9-8a5b-c8d49afff133 - Arquivo: alterações Rafa - tracking (1).xlsx - Linhas: 304
+2026-08-01 19:37:16,748 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 19:37:17,871 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 19:37:17,941 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 19:37:26,026 - INFO - UPLOAD - Sessão: 575cf874-e6aa-4327-aed3-709abca88e87 - Arquivo: alterações Rafa - tracking (1).xlsx - Linhas: 304
+2026-08-01 19:38:09,906 - INFO - PROCESS - Sessão: 575cf874-e6aa-4327-aed3-709abca88e87 - Gráfico gerado: count
+2026-08-01 19:46:28,631 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 19:46:28,739 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 19:48:54,093 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 19:48:55,302 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 19:48:55,372 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 19:49:04,992 - INFO - UPLOAD - Sessão: 79bad58d-7c47-49b1-a740-cf8de692fc9d - Arquivo: alterações Rafa - tracking (1).xlsx - Linhas: 304
+2026-08-01 20:06:52,849 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 20:06:52,932 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 20:08:24,549 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 20:08:24,642 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 20:11:20,665 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 20:11:21,951 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 20:11:22,030 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 20:12:31,893 - INFO - UPLOAD - Sessão: e492a9fa-6685-4bc1-a54f-4e557de59c99 - Arquivo: alterações Rafa - tracking (1).xlsx - Linhas: 304
+2026-08-01 20:12:32,958 - INFO - PROCESS - Sessão: e492a9fa-6685-4bc1-a54f-4e557de59c99 - Gráfico gerado: count
+2026-08-01 20:12:35,974 - INFO - PROCESS - Sessão: e492a9fa-6685-4bc1-a54f-4e557de59c99 - Gráfico gerado: count
+2026-08-01 20:14:21,518 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 20:14:22,794 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
+2026-08-01 20:14:22,868 - WARNING - Módulo rust_security não encontrado. Validação binária desativada. Execute 'maturin develop' na pasta rust_security.
